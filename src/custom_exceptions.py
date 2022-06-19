@@ -1,0 +1,2 @@
+class ModelNoProgressException(Exception):
+    pass

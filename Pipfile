@@ -1,0 +1,39 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[soruce]]
+url = "https://download.pytorch.org/whl/cu111/torch_stable.html"
+verify_ssl = false
+name = "pytorch"
+
+[packages]
+torch = {index = "pytorch",version = "==1.10.1"}
+torchvision = {index ="pytorch", version= "==0.11.2"}
+numpy = "*"
+tqdm = "*"
+opencv-python = "*"
+pandas = "*"
+pillow = "*"
+timm = "*"
+jupyter = "*"
+matplotlib = "*"
+scikit-learn = "*"
+scikit-image = "*"
+requests = "*"
+wandb = "*"
+configargparse = "*"
+scipy = "*"
+catalyst = "*"
+blitz-bayesian-pytorch = {editable = true, ref = "master", git = "https://github.com/Glutamat42/blitz-bayesian-deep-learning"}
+uncertainty-toolbox = {editable = true, git = "https://github.com/uncertainty-toolbox/uncertainty-toolbox"}
+
+[dev-packages]
+snakeviz = "*"
+
+[requires]
+python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true

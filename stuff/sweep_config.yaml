@@ -1,0 +1,63 @@
+program: main.py
+project: ma_uncertainty
+method: bayes
+name: dino min_lr
+metric:
+  name: validation_best_mse
+  goal: minimize
+parameters:
+  weight_decay:
+    value: 1e-3
+  lr:
+    value: 1e-3
+#    distribution: log_uniform
+#    min: -7.600902459542082  # math.log(5e-4)
+#    max: -6.214608098422191  # math.log(2e-3)
+  min_lr:
+    value: 0.0009334  # for validation runs during dino training epoch count is limited to 4, but lr schedule should behave as for 60 epochs. value = 1e-3 - (1e-3 - 1e-6)/60*4
+  warmup_epochs:
+    value: 0
+  batch_size:
+    value: 256
+  epochs:
+    value: 4
+  lr_scheduler:
+    value: linear
+  sampler_type:
+    value: "DistributedSampler"
+
+  mode:
+    value: "dino"
+  csv_name_test:
+    value: "validation_chapters_1_2.csv"
+  optimizer:
+    value: "adamw"
+  csv_name:
+    value: "train_chapters.csv"
+
+
+# DINO
+  dino_batch_size:
+    value: 128
+  dino_epochs:
+    value: 100
+  dino_lr:
+    value: 8.5e-3
+  dino_min_lr:
+    distribution: log_uniform
+    min: -18.420680743952367  # math.log(1e-8)
+    max: -9.210340371976182  # math.log(1e-4)
+
+
+
+command:
+  - ${env}
+  - ${interpreter}
+  - -m
+  - torch.distributed.launch
+  - --nproc_per_node=2
+  - ${program}
+  - ${args}
+  - --net_resolution
+  - 224
+  - 224
