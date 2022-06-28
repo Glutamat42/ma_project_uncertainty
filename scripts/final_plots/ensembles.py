@@ -63,6 +63,7 @@ def load_metadata(config, target_mse=None):
 
     summaries = OrderedDict()
     for model in os.listdir(path):
+        print(f"model: {model}")
         model_path = os.path.join(path, model)
         filename = [i for i in os.listdir(model_path) if i.startswith("checkpoint_best") and i.endswith(".txt")][0]
         file = os.path.join(model_path, filename)
@@ -290,7 +291,7 @@ def main(config):
     if config.ensemble_size is not None:
         ensemble_sizes=[config.ensemble_size]
     else:
-        ensemble_sizes = [x for x in [1, 3, 5, 10, 20] if x <= len(summaries)]
+        ensemble_sizes = [x for x in [1, 3, 5, 10, 20, 40, 50] if x <= len(summaries)]
     # ensemble_sizes = [x for x in [10] if x <= len(summaries)]
     print(f"There are {len(summaries)} models -> calculate ensemble sizes: {ensemble_sizes}")
 
@@ -307,6 +308,8 @@ if __name__ == '__main__':
     config = parse_args()
 
     ensemble_dirs = main(config)
+    # ensemble_dirs = ["/home/markus/workspace/data/final_data/bbb_graves/outputs_dino_whole_training/3/ensemble_1"]
+    #ensemble_dirs = ["/home/markus/workspace/data/final_data/bbb_graves/outputs_supervised_whole_training/2/ensemble_1/"]
 
     for dir in ensemble_dirs:
         create_evaluation(config, dir)

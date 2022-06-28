@@ -47,6 +47,8 @@ def parse_args():
 
 
 def main(args):
+    plt.style.use(['science', 'ieee'])
+
     # create out dir
     try:
         Path(args.target_dir).mkdir(parents=True)
@@ -107,10 +109,23 @@ def main(args):
     ### analyze loaded dataset
     # plt.plot(df.canSteering)
     df.canSteering.add(args.steering_adjustment).abs().hist(bins=180, range=(0, 360), log=True)
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    if args.ignore_direction:
+        plt.xlim(left=0)
+    plt.ylim(bottom=1)
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
+    # plt.title("Drive360")
     plt.savefig(os.path.join(args.target_dir, 'source_data_distribution_360.png'))
     plt.close()
     df.canSteering.add(args.steering_adjustment).abs().hist(bins=int(args.max_steering_angle / 2), range=(0, args.max_steering_angle),
                                                             log=True)
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    if args.ignore_direction:
+        plt.xlim(left=0)
+    plt.ylim(bottom=1)
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
     plt.savefig(os.path.join(args.target_dir, 'source_data_distribution_max_steering_angle.png'))
     plt.close()
     # plt.show()
@@ -169,13 +184,33 @@ def main(args):
 
     # remove rows with too high steering
     df.canSteering.abs().hist(bins=int(360 / 2), range=(0, 360), log=True)
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
+    if args.ignore_direction:
+        plt.xlim(left=0)
     plt.savefig(os.path.join(args.target_dir, 'unbalanced_data_distribution_with_angles_above_max_steering_angle.png'))
+    plt.close()
+    df.canSteering.abs().hist(bins=int(150 / 2), range=(0, 150), log=True)
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    if args.ignore_direction:
+        plt.xlim(left=0)
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
+    # plt.title("After preprocessing")
+    plt.savefig(os.path.join(args.target_dir, 'unbalanced_data_distribution_with_angles_till_150.png'))
     plt.close()
     df = df[abs(df.canSteering) <= args.max_steering_angle]
     log.info(f'filter too high steerings: {len(df)} ({int(len(df) / src_row_count * 100)}%)')
 
     # balance
     df.canSteering.abs().hist(bins=int(args.max_steering_angle / 2), range=(0, args.max_steering_angle), log=True)
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    if args.ignore_direction:
+        plt.xlim(left=0)
+    plt.ylim(bottom=1)
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
     plt.savefig(os.path.join(args.target_dir, 'unbalanced_data_distribution.png'))
     plt.close()
     # bins = [-1, 20, 40, 60, 1000]
@@ -251,10 +286,16 @@ def main(args):
 
     # save plot of dataset distribution
     if args.ignore_direction:
-        df.canSteering.abs().hist(bins=50, range=(0, 100))
+        df.canSteering.abs().hist(bins=round(args.max_steering_angle/2), range=(0, args.max_steering_angle))
+        plt.xlim(left=0)
     else:
-        df.canSteering.abs().hist(bins=100, range=(-100, 100))
+        df.canSteering.abs().hist(bins=args.max_steering_angle, range=(-args.max_steering_angle, args.max_steering_angle))
+    plt.xlabel("Steering wheel angle")
+    plt.ylabel("Number of samples")
+    plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
+    # plt.title("Final dataset")
     plt.savefig(os.path.join(args.target_dir, 'data_distribution.png'))
+    # sys.exit(0)
 
     # normalize canSpeed and canSteering
     # df['canSpeed'] = (df['canSpeed'] - df['canSpeed'].mean()) / df['canSpeed'].std()

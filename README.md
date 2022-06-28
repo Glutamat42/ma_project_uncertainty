@@ -1,3 +1,9 @@
+# About this branch
+This branch contains modifications only for plots, etc. It has major bugs and other problems. Only use this branch to reproduce the exact same plots (style, labels, etc). Otherwise use master branch.
+
+This branch requires: https://github.com/garrettj403/SciencePlots
+
+
 # project setup
 Some useful commands / hints to set up the project with inside a docker container.
 

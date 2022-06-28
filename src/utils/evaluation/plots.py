@@ -34,7 +34,13 @@ def draw_values_on_frame(frame: np.array, label, prediction, std=None):
         std_samples = max(min(math.ceil(std) * 100, 750), 25)  # max 500, min 1 samples
         alpha = 1 / (std_samples / 75)  # Transparency factor. change last number to modify transparency. Lower means more transparent
 
-        uct_samples = np.array([np.random.normal(prediction, std) for x in range(std_samples)])
+        # old, idea was to be darker where more samples should be ang lighter where less (better visualization of the distribution),
+        # but did not work well
+        # uct_samples = np.array([np.random.normal(prediction, std) for x in range(std_samples)])
+
+        std_factor = 2  # if 2: 1x std below and above mean
+        uct_samples = np.linspace(prediction - std / 2 * std_factor, prediction + std / 2 * std_factor, std_samples)
+
         for sample in uct_samples:
             prediction_offset = (round(diagram_radius * math.cos((sample - 90) * math.pi / 180.0)),
                                  round(diagram_radius * math.sin((sample - 90) * math.pi / 180.0)))
@@ -71,7 +77,7 @@ def draw_values_on_frame(frame: np.array, label, prediction, std=None):
     w_anchor = 18  # top left
     h_anchor = 53
     if std is not None:
-        _draw_lengend_entry(pred_color_uct, 'uncertainty', w_anchor, h_anchor - 30)
+        _draw_lengend_entry(pred_color_uct, 'uncertainty (2 x std)', w_anchor, h_anchor - 30)
     _draw_lengend_entry(pred_color, 'prediction', w_anchor, h_anchor)
     _draw_lengend_entry(gt_color, 'label', w_anchor, h_anchor + 30)
 
@@ -102,11 +108,17 @@ def plot_avg_prediction_over_angles_scatter(data, hexamode=False):
     plt.xlim(min_val, max_val)
     plt.ylim(min_val, max_val)
     # set aspect ratio
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect(1./plt.gca().get_data_ratio())
+
+    # number of labels per axis
+    plt.locator_params(axis='x', nbins=9)
 
     # y = x line
     xpoints = ypoints = plt.ylim()
-    plt.plot(xpoints, ypoints, linestyle='--', color='k', lw=3, scalex=False, scaley=False)  # y=x line
+    plt.plot(xpoints, ypoints, linestyle='--', color='darkorange', lw=2, scalex=False, scaley=False)  # y=x line
+
+    plt.xlabel("Steering wheel angle (label)")
+    plt.ylabel("Predicted steering wheel angle")
 
 
 def plot_mse_over_angles(data, bin_count=180, abs_angle=False):
@@ -126,14 +138,23 @@ def plot_mse_over_angles(data, bin_count=180, abs_angle=False):
     gdf = df.groupby("angle_bins")
 
     mse_per_bin = gdf.apply(lambda x: x.squared_error.mean() if len(x) > 0 else None)
-    mse_per_bin.plot(logy=False, title="mse")
+    # mse_per_bin.plot(logy=False, title="mse")
+
+    # mse_per_bin = mse_per_bin.dropna()
+    # plt.plot([str(x) for x in mse_per_bin.index], mse_per_bin.values)
+    ax = mse_per_bin.plot(logy=False)
+    plt.xlabel("Steering wheel angle (label)")
+    plt.ylabel("MSE")
     # rmse_per_bin = gdf.apply(lambda x: mean_squared_error(x.target, x.prediction) ** 0.5 if len(x) > 0 else None)
     # rmse_per_bin.plot(logy=False, title="rmse")
 
     # set y range for plot
     plt.ylim(0, 0.25)
 
-    plt.xticks(rotation=25)
+    plt.gca().set_aspect(1./plt.gca().get_data_ratio())
+    # ax.set_aspect(1./ax.get_data_ratio())
+
+    # plt.xticks(rotation=25)
 
 
 def _get_value_ranges(df):
@@ -162,16 +183,22 @@ def plot_avg_prediction_over_angles(data, abs_angle=False):
     avg_pred_per_bin = gdf.apply(lambda x: x.prediction_as_angle.mean())
 
     plt.plot(avg_pred_per_bin.axes[0].categories, avg_pred_per_bin.values)
+    # plt.margins(x=0, y=0)
+    plt.xlabel("Steering wheel angle (label)")
+    plt.ylabel("Average predicted angle")
 
     # set value range
     plt.xlim(min_val, max_val)
     plt.ylim(min_val, max_val)
     # set aspect ratio
-    plt.gca().set_aspect('equal')
+    plt.gca().set_aspect(1./plt.gca().get_data_ratio())
+
+    # number of labels per axis
+    plt.locator_params(axis='x', nbins=9)
 
     # y = x line
     xpoints = ypoints = plt.ylim()
-    plt.plot(xpoints, ypoints, linestyle='--', color='k', lw=3, scalex=False, scaley=False)  # y=x line
+    plt.plot(xpoints, ypoints, linestyle='--', color='darkorange', lw=2, scalex=False, scaley=False)  # y=x line
 
 
 def plot_sample_frames(data, dataset_dir, draw_overlay=True):

@@ -58,9 +58,16 @@ def create_evaluation(config, path, save_plots=True):
 
     print("start calculating metrcis and generating per epoch plots. This will take a bit (but not too long)")
     csv_list = [x for x in os.listdir(path) if 'predictions.csv' in x]
-    with Pool(multiprocessing.cpu_count()) as p:
-        future = p.starmap_async(func=evaluate_one_epoch, iterable=[(custom_config, path, csv) for csv in csv_list])
-        results = future.get()
+    print("CSV list generated")
+
+    # I have no idea why but concurrency stopped working. Its mostly crashing during generation of "sample_frames_supervised_train"
+    # with the following error message: "SyntaxError: not a PNG file"
+    # single threaded is working fine
+    results = [evaluate_one_epoch(custom_config, path, csv) for csv in csv_list]
+    # with Pool(multiprocessing.cpu_count()) as p:
+    #     future = p.starmap_async(func=evaluate_one_epoch, iterable=[(custom_config, path, csv) for csv in csv_list])
+    #     results = future.get()
+    print("evaluations generated")
 
     # sort results (even for single threaded the correct order is not guaranteed because the files might be listed in wrong order)
     # and split der results to individual variables
@@ -71,17 +78,39 @@ def create_evaluation(config, path, save_plots=True):
 
     # plots with metrics over time (what normally wandb does)
     def save_or_show_plot(metric, title, log_scale=True):
+        # ugly but does not break anything
+        name_mappings = {
+            'crps': {'y_label': 'CRPS', 'title': None},
+            'miscal_area': {'y_label': 'Miscalibration area', 'title': None},
+            'nll': {'y_label': 'NLL', 'title': None},
+            'sharpness': {'y_label': 'Sharpness', 'title': None},
+            'validation_mae': {'y_label': 'MAE', 'title': None},
+            'validation_mse': {'y_label': 'MSE', 'title': None},
+            'validation_mse_equally_weighted': {'y_label': 'MSE', 'title': 'Equally weighted bins'},
+            'validation_mse_extreme_values': {'y_label': 'MSE', 'title': 'Only samples with high angle (above 60°)'},
+            'validation_rmse': {'y_label': 'RMSE', 'title': None}
+        }
+
         plt.plot(x, metric)
         plt.yscale('log' if log_scale else 'linear')
         plt.grid(which='both')
-        plt.title(title)
+        if name_mappings[title]['title'] is not None:
+            plt.title(name_mappings[title]['title'])
+
+        # aspect ratio
+        plt.gca().set_aspect(1. / plt.gca().get_data_ratio())
+
+        plt.xlabel("Epoch")
+        plt.ylabel(name_mappings[title]['y_label'])
+
+        plt.xlim(left=1, right=len(x))
 
         if save_plots:
             img = asImg(None)
             filename = f"{title}"
             directory = os.path.join(path, 'plots_metrics')
             Path(directory).mkdir(exist_ok=True)
-            img.save(os.path.join(directory, filename), "JPEG")  # WebP would save ~22%, but Windows has bad support for it
+            img.save(os.path.join(directory, filename) + ".png", "PNG")  # WebP would save ~22%, but Windows has bad support for it
         else:
             plt.show()
 

@@ -23,7 +23,7 @@ def convert_normed_values_to_angles(std, mean, value, invert=True):
 
 def plt2PIL():
     buf = io.BytesIO()
-    plt.savefig(buf, format="jpg", dpi=250)  # main switch for image quality. Don't set dpi too high, it will result in gigantic resolutions
+    plt.savefig(buf, format="png", dpi=250)  # main switch for image quality. Don't set dpi too high, it will result in gigantic resolutions
     buf.seek(0)
     i = Image.open(buf)
     # buf.close()
@@ -37,12 +37,17 @@ def asImg(_):
 
 
 def generate_evaluation_plots(config, predictions, mode='save', out_name_prefix='', epoch=-2):
+    plt.style.use(['science', 'ieee'])
+
     def save_or_show_plot(img, title):
         if mode == 'save':
             filename = f"{title}_{(out_name_prefix + '_') if len(out_name_prefix) > 0 else ''}supervised_train_ep{str(epoch + 1).zfill(3)}"
             directory = os.path.join(config.output_dir, 'plots')
             Path(directory).mkdir(exist_ok=True)
-            img.save(os.path.join(directory, filename), "JPEG", quality=85, optimize=True)  # WebP would save ~22%, but Windows has bad support for it
+            # print(directory)
+            # print(filename)
+            # WebP would save ~22%, but Windows has bad support for it
+            img.save(os.path.join(directory, filename) + ".png", "PNG", quality=95, optimize=True)
         else:  # 'show'
             plt.imshow(img)
             plt.axis('off')
@@ -78,13 +83,15 @@ def generate_evaluation_plots(config, predictions, mode='save', out_name_prefix=
                                        predictions['target'].values,
                                        n_subset=50,
                                        num_stds_confidence_bound=2)
-        plt.gcf().set_size_inches(4, 4)
+        plt.gcf().set_size_inches(3.3, 2.5)
+        plt.style.use(['science', 'ieee'])
         img_intervals_ordered = asImg(None)
         save_or_show_plot(img_intervals_ordered, 'img_intervals_ordered')
         generated_plots['intervals_ordered'] = img_intervals_ordered
 
         uct.viz.plot_calibration(predictions['prediction'].values, predictions['std'].values, predictions['target'].values)
-        plt.gcf().set_size_inches(4, 4)
+        plt.gcf().set_size_inches(3.3, 2.5)
+        plt.style.use(['science', 'ieee'])
         img_calibration = asImg(None)
         save_or_show_plot(img_calibration, 'img_calibration')
         generated_plots['calibration'] = img_calibration
